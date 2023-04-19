@@ -5,18 +5,20 @@ import math
 
 from pygame import Vector2
 
-from engine.map import Map
-from engine.player import Player
+from engine.Map import Map
+from engine.Player import Player
 
 
 @dataclass
 class Column:
     height: int
     color: int
+    texture_index: int
+    texture_coord: float
     shadow: bool
 
 
-class RayCaster:
+class Raycaster:
     def __init__(self, width: int, height: int):
         self.width = width
         self.height = height
@@ -34,13 +36,13 @@ class RayCaster:
         camera_x = (2 / self.width) * column - 1
 
         # ray to cast
-        ray = Vector2(player.dir.x + player.plane.x * camera_x,
-                      player.dir.y + player.plane.y * camera_x)
+        ray = camera_x * player.plane + player.dir
 
         # map coords
         map = Vector2(int(player.pos.x), int(player.pos.y))
 
         # length between intersects, not numerically correct but the ratio is correct
+        # use 1e30 to prevent divide by zero exceptions
         delta_dist_x = math.fabs(1 / ray.x) if ray.x != 0 else 1e30
         delta_dist_y = math.fabs(1 / ray.y) if ray.y != 0 else 1e30
 
@@ -53,6 +55,7 @@ class RayCaster:
         else:
             step.x = 1
             side_dist.x = (map.x + 1 - player.pos.x) * delta_dist_x
+
         if (ray.y < 0):
             step.y = -1
             side_dist.y = (player.pos.y - map.y) * delta_dist_y
@@ -60,9 +63,11 @@ class RayCaster:
             step.y = 1
             side_dist.y = (map.y + 1 - player.pos.y) * delta_dist_y
 
+        # run the DDA algorithm
         intersect = 0
         side = -1
         while (intersect == 0):
+            # increment the smaller of x and y
             if (side_dist.x < side_dist.y):
                 side_dist.x += delta_dist_x
                 map.x += step.x
@@ -72,10 +77,24 @@ class RayCaster:
                 map.y += step.y
                 side = 1
 
+            # check for intersection
             intersect = world_map.world_map[(map.x, map.y)] if (
                 map.x, map.y) in world_map.world_map else 0
 
+        # get dist based on side. we've overcounted delta_dist once, so subtract
         dist = side_dist.x - delta_dist_x if side == 0 else side_dist.y - delta_dist_y
+
+        # column height is inversely proportional to distance
         height = int(self.height // dist)
 
-        return Column(height, intersect, side == 0)
+        texture_index = world_map.world_map[(map.x, map.y)]
+
+        # get texture coord, from 0 to 1, based on where the intersection happened
+        texture_coord = 0.0
+        if side == 0:
+            texture_coord = player.pos.y + dist * ray.y
+        else:
+            texture_coord = player.pos.x + dist * ray.x
+        texture_coord -= math.floor(texture_coord)
+
+        return Column(height, intersect, texture_index, texture_coord, side == 0)

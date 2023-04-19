@@ -6,6 +6,7 @@ class Map:
     def __init__(self, path):
         map_data = self.load_map(path)
         self.world_map = self.build_map(map_data)
+        self.texture_map = self.load_texture_map()
 
     def load_map(self, path):
         with open(path, 'r') as yml_file:
@@ -21,7 +22,12 @@ class Map:
                     world_map[(i, j)] = value
         return world_map
 
-    def draw(self, screen):
-        scale = 50
-        [pygame.draw.rect(screen, 'darkgray',
-                          (pos[0] * scale, pos[1] * scale, scale, scale), 2) for pos in self.world_map]
+    def load_texture_map(self) -> dict[int, str]:
+        return {
+            1: 'stone',
+            2: 'brick',
+            3: 'wood',
+        }
+
+    def get_texture_id(self, map_val: int) -> str:
+        return self.texture_map[map_val] if map_val in self.texture_map else 'unknown'

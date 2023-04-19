@@ -1,9 +1,7 @@
 import pygame as pygame
 from pygame import Vector2
 
-import math
-
-from engine.map import Map
+from engine.Map import Map
 from input.commands import Command
 
 
