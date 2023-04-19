@@ -1,12 +1,12 @@
 import pygame as pygame
 import sys
 from pygame import Vector2
-from TextureManager import TextureManager
 from config import Config
 from engine.Map import Map
 from engine.Player import Player
 from engine.Raycaster import Raycaster
 from engine.Renderer import Renderer
+from engine.TextureManager import TextureManager
 from input.input_handler import InputHandler
 
 
@@ -20,7 +20,9 @@ class DoomCloneReloaded:
 
     def init_pygame(self):
         pygame.init()
+
         pygame.font.init()
+        self.debug_font = pygame.font.SysFont('Consolas', 14)
 
         pygame.display.set_caption('Raycast Rendering')
 
@@ -77,9 +79,14 @@ class DoomCloneReloaded:
 
     def draw(self):
         columns = self.raycaster.cast_rays(self.player, self.map)
+
         self.renderer.render(self.screen, columns,
-                             self.map, self.texture_manager)
-        self.renderer.debug_overlay(self.screen, self.clock.get_fps())
+                             self.player, self.map, self.texture_manager)
+
+        pygame.draw.rect(self.screen, 'black', (0, 0, 100, 25))
+        text = self.debug_font.render(
+            f'fps: {self.clock.get_fps(): .1f}', False, 'white')
+        self.screen.blit(text, (5, 5))
 
     def run(self):
         while self.running:
