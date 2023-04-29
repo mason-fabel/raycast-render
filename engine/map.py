@@ -1,18 +1,12 @@
+from typing import Dict, List
 import pygame as pygame
-import yaml
 
 
 class Map:
-    def __init__(self, path):
-        map_data = self.load_map(path)
+    def __init__(self, map_data: List[List[int]], tile_defs: Dict[str, str]):
         self.world_map = self.build_map(map_data)
-        self.texture_map = self.load_texture_map()
-
-    def load_map(self, path):
-        with open(path, 'r') as yml_file:
-            data = yaml.safe_load(yml_file)
-
-        return data
+        print(tile_defs)
+        self.tile_defs = tile_defs
 
     def build_map(self, map_data):
         world_map = {}
@@ -22,12 +16,6 @@ class Map:
                     world_map[(i, j)] = value
         return world_map
 
-    def load_texture_map(self) -> dict[int, str]:
-        return {
-            1: 'stone',
-            2: 'brick',
-            3: 'wood',
-        }
-
     def get_texture_id(self, map_val: int) -> str:
-        return self.texture_map[map_val] if map_val in self.texture_map else 'unknown'
+        key = str(map_val)
+        return self.tile_defs[key] if key in self.tile_defs else 'unknown'

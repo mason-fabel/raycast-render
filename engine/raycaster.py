@@ -11,6 +11,7 @@ from engine.Player import Player
 
 @dataclass
 class Column:
+    depth: float
     height: int
     color: int
     texture_index: int
@@ -97,4 +98,4 @@ class Raycaster:
             texture_coord = player.pos.x + dist * ray.x
         texture_coord -= math.floor(texture_coord)
 
-        return Column(height, intersect, texture_index, texture_coord, side == 0)
+        return Column(dist, height, intersect, texture_index, texture_coord, side == 0)

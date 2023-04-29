@@ -2,7 +2,7 @@ import pygame as pygame
 from pygame import Vector2
 
 from engine.Map import Map
-from input.commands import Command
+from input.Command import Command
 
 
 class Player:

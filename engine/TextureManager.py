@@ -15,8 +15,7 @@ class TextureManager:
 
     def load_texture(self, texture_def: Dict[str, Any]):
         name = texture_def['name']
-        x = texture_def['x']
-        y = texture_def['y']
+        x, y = texture_def['pos']
 
         self.textures[name] = self.sprite_sheet.subsurface(
             (x * self.texture_size, y * self.texture_size, self.texture_size, self.texture_size)).convert()

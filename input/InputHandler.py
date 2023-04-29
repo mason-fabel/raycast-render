@@ -1,5 +1,5 @@
 import pygame
-from input.commands import Command
+from input.Command import Command
 
 
 class InputHandler:

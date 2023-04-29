@@ -1,103 +1,25 @@
-import pygame as pygame
-import sys
-from pygame import Vector2
-from config import Config
-from engine.Map import Map
-from engine.Player import Player
-from engine.Raycaster import Raycaster
-from engine.Renderer import Renderer
-from engine.TextureManager import TextureManager
-from input.input_handler import InputHandler
+from typing import Any, Dict
+import pygame
+import yaml
+from engine.LevelManager import LevelManager
 
 
-class DoomCloneReloaded:
-    def __init__(self):
-        self.config = Config('doom-clone-reloaded.cfg')
-        self.init_pygame()
-        self.init_game()
-        self.delta_time = 1
-        self.running = True
+def read_config(path: str) -> Dict[str, Any]:
+    with open(path, 'r') as file:
+        return yaml.safe_load(file)
 
-    def init_pygame(self):
-        pygame.init()
 
-        pygame.font.init()
-        self.debug_font = pygame.font.SysFont('Consolas', 14)
-
-        pygame.display.set_caption('Raycast Rendering')
-
-        self.screen = pygame.display.set_mode((
-            self.config.section('graphics')['width'],
-            self.config.section('graphics')['height']))
-        self.clock = pygame.time.Clock()
-        self.fps = self.config.section('graphics')['fps']
-
-    def init_game(self):
-        self.map = Map(self.config.section('map')['path'])
-        self.input_handler = InputHandler()
-        self.player = Player(
-            Vector2(
-                self.config.section('player')['pos_x'],
-                self.config.section('player')['pos_y']
-            ),
-            Vector2(
-                self.config.section('player')['dir_x'],
-                self.config.section('player')['dir_y']
-            ),
-            Vector2(
-                self.config.section('player')['plane_x'],
-                self.config.section('player')['plane_y']
-            ),
-            self.config.section('player')['speed'],
-            self.config.section('player')['rot_speed'],
-            self.map)
-        self.raycaster = Raycaster(
-            self.config.section('graphics')['width'],
-            self.config.section('graphics')['height'])
-        self.texture_manager = TextureManager(
-            self.config.section('textures')['path'],
-            self.config.section('textures')['size'],
-            self.config.section('texture_defs'))
-        self.renderer = Renderer(
-            self.config.section('graphics')['width'],
-            self.config.section('graphics')['height'],
-            self.config.section('renderer')['floor_color'],
-            self.config.section('renderer')['sky_color'])
-
-    def check_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                self.running = False
-
-    def update(self):
-        pygame.display.flip()
-        self.delta_time = self.clock.tick(self.fps)
-
-        keys = pygame.key.get_pressed()
-        commands = self.input_handler.handle_keys(keys)
-        self.player.update(commands, self.delta_time)
-
-    def draw(self):
-        columns = self.raycaster.cast_rays(self.player, self.map)
-
-        self.renderer.render(self.screen, columns,
-                             self.player, self.map, self.texture_manager)
-
-        pygame.draw.rect(self.screen, 'black', (0, 0, 100, 25))
-        text = self.debug_font.render(
-            f'fps: {self.clock.get_fps(): .1f}', False, 'white')
-        self.screen.blit(text, (5, 5))
-
-    def run(self):
-        while self.running:
-            self.check_events()
-            self.update()
-            self.draw()
-
-        pygame.quit()
-        sys.exit()
+def init_pygame(config: Dict[str, Any]) -> pygame.Surface:
+    pygame.init()
+    pygame.display.set_caption('Raycast Rendering')
+    return pygame.display.set_mode((config['graphics']['width'], config['graphics']['height']))
 
 
 if __name__ == '__main__':
-    game = DoomCloneReloaded()
-    game.run()
+    config = read_config('doom-clone-reloaded.cfg')
+    window = init_pygame(config)
+
+    level_manager = LevelManager()
+    level = level_manager.load('data/map01.json')
+
+    level.run(window)
